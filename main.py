@@ -58,7 +58,6 @@ def init_sound():
         raise SystemExit, message
     return boss_hit
 
-
 class Fireball(pygame.sprite.Sprite):
     def __init__(self, image, position, screen):
         pygame.sprite.Sprite.__init__(self)
@@ -180,6 +179,7 @@ class Dragon(pygame.sprite.Sprite):
         self.rect.topleft = (4, 200)
         self.step = 8
         self.timer = 0
+        self.lives = 3
 
     def move(self, key):
         rect = self.rect
@@ -198,6 +198,13 @@ class Dragon(pygame.sprite.Sprite):
         if self.timer < pygame.time.get_ticks():
             spritelist.add(Fireball(image, self.rect, screen))
             self.timer = pygame.time.get_ticks() + 500
+
+    def hit(self):
+        print "AU!"
+        self.lives -= 1
+        if self.lives < 0:
+            print "GAME OVER"
+            pygame.event.post(pygame.event.Event(QUIT))
 
 screen, background = init_screen(PANDORA)
 pygame.display.flip()
@@ -251,6 +258,7 @@ while True:
 
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
+        dragon.hit()
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
     if (pygame.sprite.spritecollide(boss, fireballs, True, pygame.sprite.collide_mask)):
