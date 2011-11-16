@@ -18,6 +18,16 @@ TRANSPARENT = 0, 0, 255
 
 images = {'DRAGON' : 0, 'BOSS' : 0, 'FIREBALL' : 0, 'DEMON' : 0, 'BABY' : 0}
 
+class Gamecontrol():
+    def __init__(self):
+        self.sprites = []
+        print "created?"
+
+    def add_sprite(self, sprite):
+        self.sprites.append(sprite)
+        num = len(self.sprites)
+        print num
+
 def init_screen(size):
     black = 0, 0, 0
     screen = pygame.display.set_mode(size)
@@ -51,12 +61,11 @@ def init_sound():
     pygame.mixer.music.set_volume(0.5)
     pygame.mixer.music.play(-1)
 
-    try:
-        boss_hit = pygame.mixer.Sound("resources\Boss_Hit.wav")
-    except pygame.error, message:
-        print 'Cannot load sound:', wav
-        raise SystemExit, message
-    return boss_hit
+    boss_hit = pygame.mixer.Sound("resources\Boss_Hit.wav")
+    baby_hit = pygame.mixer.Sound("resources\Baby_Hit.wav")
+    demon_hit = pygame.mixer.Sound("resources\Demon_Hit.wav")
+
+    return boss_hit, baby_hit, demon_hit
 
 class Fireball(pygame.sprite.Sprite):
     def __init__(self, image, position, screen):
@@ -154,6 +163,10 @@ class Boss(pygame.sprite.Sprite):
     def hit(self):
         self.sound_hit.play()
         self.energy -= 10
+        print self.energy
+        if self.energy < 0:
+            print "You defeated the Boss"
+            pygame.event.post(pygame.event.Event(QUIT))
         self.change_colour()
         pygame.time.set_timer(BOSSFLASH_EVENT, 50)
 
@@ -180,6 +193,7 @@ class Dragon(pygame.sprite.Sprite):
         self.step = 8
         self.timer = 0
         self.lives = 3
+        self.score = 0
 
     def move(self, key):
         rect = self.rect
@@ -206,14 +220,19 @@ class Dragon(pygame.sprite.Sprite):
             print "GAME OVER"
             pygame.event.post(pygame.event.Event(QUIT))
 
+    def set_score(self, points):
+        self.score += points
+        print max(0, self.score)
+
 screen, background = init_screen(PANDORA)
 pygame.display.flip()
 dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
-boss_hit_snd = init_sound()
+boss_hit_snd, baby_hit_snd, demon_hit_snd = init_sound()
 rendering = pygame.sprite.RenderUpdates()
 
 dragon = Dragon(dragon_img, screen)
 boss = Boss(boss_img, boss_hit_img, boss_hit_snd, screen)
+
 rendering.add(dragon)
 rendering.add(boss)
 fireballs = pygame.sprite.RenderUpdates()
@@ -261,10 +280,15 @@ while True:
         dragon.hit()
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
+        dragon.set_score(15)
     if (pygame.sprite.spritecollide(boss, fireballs, True, pygame.sprite.collide_mask)):
         print "#boss is hit"
         boss.hit()
     if (pygame.sprite.groupcollide(fireballs, demons, True, True)):
         print "#fireball hit demon"
+        dragon.set_score(10)
+        demon_hit_snd.play()
     if (pygame.sprite.groupcollide(fireballs, babies, True, True)):
         print "#fireball hit baby"
+        dragon.set_score(-15)
+        baby_hit_snd.play()
