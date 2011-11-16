@@ -69,7 +69,6 @@ def init_screen(size):
     screen = pygame.display.set_mode(size)
     bg_image = pygame.image.load("resources\Background800x480.bmp").convert()
     background = pygame.Surface(size)
-    #background.blit(bg_image, [0, 0])
     screen.blit(bg_image, [0, 0])
 
     return screen, bg_image
@@ -149,6 +148,9 @@ class Object(pygame.sprite.Sprite):
         self.screen = screen
         self.screen_size = screen.get_size()
 
+    def get_rect(self):
+        return self.rect
+
 class Boss(Object):
     def __init__(self, image, altimage, screen):
         Object.__init__(self, image, screen)
@@ -173,7 +175,7 @@ class Boss(Object):
 
     def change_colour(self):
         img = self.image
-        self.image = altimage
+        self.image = self.altimage
         self.altimage = img
 
     def set_energy(self, d):
@@ -199,17 +201,29 @@ class Boss(Object):
             if self.rect.bottom >= self.screen_size[1]:
                 self.direction = 1
 
-#   def draw_healthbar(self):
-#       rect = Rect(self.rect.left, self.rect.bottom-4, self.energy, 4)
-#       if (self.energy > 65):
-#           col = 0, 255, 0
-#       elif (self.energy > 25):
-#           col = 255, 255, 0
-#       else:
-#           col = 255, 0, 0
-#       self.screen.fill(col, rect)
-#       rect = Rect(self.rect.left, self.rect.bottom-8, self.energy, 16)
-#       pygame.display.update(rect)
+class Healthbar(Object):
+    def __init__(self, screen, rect): #rect is rectangle of Boss
+        bar = pygame.Surface((100, 8)).convert()
+        bar.set_colorkey(TRANSPARENT)
+
+        Object.__init__(self, bar, screen)
+
+        self.rect.left = rect.left
+        self.rect.bottom = rect.bottom
+
+    def move(self, rect, health):
+        self.rect.left = rect.left
+        self.rect.bottom = rect.bottom
+
+        if (health > 65):
+            col = 0, 255, 0
+        elif (health > 30):
+            col = 255, 255, 0
+        else:
+            col = 255, 0, 0
+
+        self.image.fill(TRANSPARENT)
+        self.image.fill(col, Rect(0, 0, health, 8))
 
 class Dragon(Object):
     def __init__(self, image, screen):
@@ -273,8 +287,12 @@ rendering = pygame.sprite.RenderUpdates()
 dragon = Dragon(dragon_img, screen)
 boss = Boss(boss_img, boss_hit_img, screen)
 
+healthbar = Healthbar(screen, boss.rect)
+
 rendering.add(dragon)
 rendering.add(boss)
+rendering.add(healthbar)
+
 fireballs = pygame.sprite.RenderUpdates()
 demons = pygame.sprite.RenderUpdates()
 babies = pygame.sprite.RenderUpdates()
@@ -313,6 +331,7 @@ while True:
     fireballs.update()
     demons.update()
     babies.update()
+    healthbar.move(boss.rect, boss.energy)
 
     pygame.display.update(rendering.draw(screen))
     pygame.display.update(fireballs.draw(screen))
