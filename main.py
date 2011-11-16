@@ -16,29 +16,63 @@ BABY_EVENT = USEREVENT+2
 BOSSFLASH_EVENT = USEREVENT+3
 ENERGY_EVENT = USEREVENT+4
 TRANSPARENT = 0, 0, 255
+BLACK = 0, 0, 0
 
 images = {'DRAGON' : 0, 'BOSS' : 0, 'FIREBALL' : 0, 'DEMON' : 0, 'BABY' : 0}
 
 class Gamecontrol():
     def __init__(self):
-        self.sprites = []
-        print "created?"
+        self.objects = []
 
-    def add_sprite(self, sprite):
-        self.sprites.append(sprite)
-        num = len(self.sprites)
-        print num
+    def add_object(self, obj):
+        self.objects.append(obj)
+        num = len(self.objects)
+
+    def draw_statistics(self, sprite):
+        #health, score, lives
+        pass
+
+    def update(self):
+        #update statistics and sprites
+        pass
+
+    def draw_screen(self):
+        #draw sprites and statistics
+        pass
+
+    def eval_events(self):
+        #get events and do something with it
+        pass
+
+    def load_images(file):
+        img = pygame.image.load(file).convert()
+        img.set_colorkey(TRANSPARENT)
+
+        return img
+
+    def init_images(self):
+        #load images and put in a dictionary/list
+        self.images = {}
+        self.images['dragon'] = load_image("resources\Dragon.gif")
+        self.images['boss'] = load_image("resources\Boss.gif")
+        self.images['boss_hit'] = load_image("resources\Boss_Hit.gif")
+        self.images['fireball'] = load_image("resources\Fireball.gif")
+        self.images['demon'] = load_image("resources\Demon2.gif")
+        self.images['baby'] = load_image("resources\Baby.gif")
+
+    def init_sounds(self):
+        #load music and sounds
+        self.sounds = {}
+        self.sounds['music'] = "laad muziek"
 
 def init_screen(size):
-    black = 0, 0, 0
     screen = pygame.display.set_mode(size)
     bg_image = pygame.image.load("resources\Background800x480.bmp").convert()
     background = pygame.Surface(size)
-    background.fill(black)
-    background.blit(bg_image, [0, 0])
-    screen.blit(background, [0, 0])
+    #background.blit(bg_image, [0, 0])
+    screen.blit(bg_image, [0, 0])
 
-    return screen, background
+    return screen, bg_image
 
 def init_images():
     dragon = pygame.image.load("resources\Dragon.gif").convert()
@@ -67,24 +101,6 @@ def init_sound():
     demon_hit = pygame.mixer.Sound("resources\Demon_Hit.wav")
 
     return boss_hit, baby_hit, demon_hit
-
-class Fireball(pygame.sprite.Sprite):
-    def __init__(self, image, position, screen):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = image
-        self.mask = pygame.mask.from_surface(image)
-        self.screen = screen
-        self.screen_size = screen.get_size()
-        self.rect = self.image.get_rect()
-        self.rect.left = position.right
-        self.rect.top = position.top
-        self.step = 12
-
-    def update(self):
-        self.rect.left += self.step
-        if self.rect.left > self.screen_size[0]:
-            self.kill()
-            del self
 
 class Baby(pygame.sprite.Sprite):
     def __init__(self, image, position, screen):
@@ -124,24 +140,25 @@ class Demon(pygame.sprite.Sprite):
             self.kill()
             del self
 
-class Boss(pygame.sprite.Sprite):
-    def __init__(self, image, image_hit, hit_sound, screen):
+class Object(pygame.sprite.Sprite):
+    def __init__(self, image, screen):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
-        self.image_normal = image
-        self.image_hit = image_hit
         self.mask = pygame.mask.from_surface(image)
-
+        self.rect = self.image.get_rect()
         self.screen = screen
         self.screen_size = screen.get_size()
 
-        self.rect = self.image.get_rect()
-        self.rect.topright = (self.screen_size[0] - 4, 200)
+class Boss(Object):
+    def __init__(self, image, altimage, screen):
+        Object.__init__(self, image, screen)
 
+        self.rect.topright = (self.screen_size[0] - 4, 200)
+        self.altimage = altimage
         self.direction = 1
         self.step = 8
         self.energy = 100
-        self.sound_hit = hit_sound
+
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
         pygame.time.set_timer(BABY_EVENT, random.randint(1500, 7500))
         pygame.time.set_timer(ENERGY_EVENT, 1000)
@@ -155,17 +172,14 @@ class Boss(pygame.sprite.Sprite):
         spritelist.add(Baby(image, self.rect, screen))
 
     def change_colour(self):
-        if (self.image == self.image_hit):
-            self.image = self.image_normal
-        else:
-            self.image = self.image_hit
+        img = self.image
+        self.image = altimage
+        self.altimage = img
 
     def set_energy(self, d):
-        self.energy += d
-        self.energy = min(199, self.energy)
+        self.energy = min(100, self.energy + d)
 
     def hit(self):
-        self.sound_hit.play()
         self.set_energy(-10)
         if self.energy <= 0:
             print "You defeated the Boss"
@@ -173,21 +187,7 @@ class Boss(pygame.sprite.Sprite):
         self.change_colour()
         pygame.time.set_timer(BOSSFLASH_EVENT, 50)
 
-    def draw_healthbar(self):
-        rect = Rect(self.rect.left, self.rect.bottom-4, self.energy, 4)
-        if (self.energy > 65):
-            col = 0, 255, 0
-        elif (self.energy > 25):
-            col = 255, 255, 0
-        else:
-            col = 255, 0, 0
-        self.screen.fill(col, rect)
-        rect = Rect(self.rect.left, self.rect.bottom-8, self.energy, 16)
-        pygame.display.update(rect)
-
     def update(self):
-        #self.energy += 1
-        #self.energy = min(100, self.energy)
         if self.direction == 1:
             #move_up
             self.rect.top -= self.step
@@ -198,15 +198,23 @@ class Boss(pygame.sprite.Sprite):
             self.rect.top += self.step
             if self.rect.bottom >= self.screen_size[1]:
                 self.direction = 1
-        self.draw_healthbar()
 
-class Dragon(pygame.sprite.Sprite):
+#   def draw_healthbar(self):
+#       rect = Rect(self.rect.left, self.rect.bottom-4, self.energy, 4)
+#       if (self.energy > 65):
+#           col = 0, 255, 0
+#       elif (self.energy > 25):
+#           col = 255, 255, 0
+#       else:
+#           col = 255, 0, 0
+#       self.screen.fill(col, rect)
+#       rect = Rect(self.rect.left, self.rect.bottom-8, self.energy, 16)
+#       pygame.display.update(rect)
+
+class Dragon(Object):
     def __init__(self, image, screen):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = image
-        self.screen = screen
-        self.screen_size = screen.get_size()
-        self.rect = self.image.get_rect()
+        Object.__init__(self, image, screen)
+
         self.rect.topleft = (4, 200)
         self.step = 8
         self.timer = 0
@@ -225,10 +233,12 @@ class Dragon(pygame.sprite.Sprite):
 
         self.rect = rect
 
-    def fire(self, spritelist, image, screen):
+    def fire(self, image):
         if self.timer < pygame.time.get_ticks():
-            spritelist.add(Fireball(image, self.rect, screen))
             self.timer = pygame.time.get_ticks() + 500
+            return Fireball(image, self.screen, self.rect)
+        else:
+            return None
 
     def hit(self):
         self.lives -= 1
@@ -238,7 +248,21 @@ class Dragon(pygame.sprite.Sprite):
 
     def set_score(self, points):
         self.score += points
-        print max(0, self.score)
+        self.score = max(0, self.score)
+
+class Fireball(Object):
+    def __init__(self, image, screen, position):
+        Object.__init__(self, image, screen)
+
+        self.rect.left = position.right
+        self.rect.top = position.top
+        self.step = 12
+
+    def update(self):
+        self.rect.left += self.step
+        if self.rect.left > self.screen_size[0]:
+            self.kill()
+            del self
 
 screen, background = init_screen(PANDORA)
 pygame.display.flip()
@@ -247,7 +271,7 @@ boss_hit_snd, baby_hit_snd, demon_hit_snd = init_sound()
 rendering = pygame.sprite.RenderUpdates()
 
 dragon = Dragon(dragon_img, screen)
-boss = Boss(boss_img, boss_hit_img, boss_hit_snd, screen)
+boss = Boss(boss_img, boss_hit_img, screen)
 
 rendering.add(dragon)
 rendering.add(boss)
@@ -281,7 +305,9 @@ while True:
             if event.key in (K_UP, K_DOWN):
                 dragon.move(event.key)
             if event.key == K_SPACE:
-                dragon.fire(fireballs, fireball_img, screen)
+                fireball = dragon.fire(fireball_img)
+                if fireball != None:
+                    fireballs.add(fireball)
 
     rendering.update()
     fireballs.update()
