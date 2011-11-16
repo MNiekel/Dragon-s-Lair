@@ -13,8 +13,7 @@ BG_SIZE = 640, 480
 PANDORA = 800, 480
 DEMON_EVENT = USEREVENT+1
 BABY_EVENT = USEREVENT+2
-BOSSFLASH_EVENT = USEREVENT+3
-ENERGY_EVENT = USEREVENT+4
+
 TRANSPARENT = 0, 0, 255
 BLACK = 0, 0, 0
 
@@ -160,10 +159,11 @@ class Boss(Object):
         self.direction = 1
         self.step = 8
         self.energy = 100
+        self.flash = -1
+        self.autoheal = 250 #heal every autoheal updates
 
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
         pygame.time.set_timer(BABY_EVENT, random.randint(1500, 7500))
-        pygame.time.set_timer(ENERGY_EVENT, 1000)
 
     def release_demon(self, spritelist, image, screen):
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
@@ -182,14 +182,24 @@ class Boss(Object):
         self.energy = min(100, self.energy + d)
 
     def hit(self):
-        self.set_energy(-10)
+        self.energy = min(100, self.energy - 10)
         if self.energy <= 0:
             print "You defeated the Boss"
             pygame.event.post(pygame.event.Event(QUIT))
         self.change_colour()
-        pygame.time.set_timer(BOSSFLASH_EVENT, 50)
+        self.flash = 1
 
     def update(self):
+        if self.flash == 0:
+            self.change_colour()
+            self.flash = -1
+        elif self.flash > 0:
+            self.flash -= 1
+
+        if self.autoheal < 0:
+            self.energy += 1
+            self.autoheal = 250
+
         if self.direction == 1:
             #move_up
             self.rect.top -= self.step
@@ -215,13 +225,15 @@ class Healthbar(Object):
         self.rect.left = rect.left
         self.rect.bottom = rect.bottom
 
-        if (health > 65):
-            col = 0, 255, 0
-        elif (health > 30):
-            col = 255, 255, 0
+        x = (255 * health)/50 - 255
+
+        if (health > 50):
+            col = 255 - x, 255, 0
+        elif (health > 10):
+            col = 255, 255 + x, 0
         else:
             col = 255, 0, 0
-
+            
         self.image.fill(TRANSPARENT)
         self.image.fill(col, Rect(0, 0, health, 8))
 
@@ -264,6 +276,21 @@ class Dragon(Object):
         self.score += points
         self.score = max(0, self.score)
 
+    def hit_by_demon(self):
+        self.score = max(0, self.score - 10)
+
+    def hit_baby(self):
+        self.score = max(0, self.score - 20)
+
+    def hit_demon(self):
+        self.score += 5
+
+    def caught_baby(self):
+        self.score += 10
+
+    def hit_boss(self):
+        pass
+
 class Fireball(Object):
     def __init__(self, image, screen, position):
         Object.__init__(self, image, screen)
@@ -302,6 +329,7 @@ while True:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            print dragon.score
             sys.exit()
 
         elif event.type == DEMON_EVENT:
@@ -309,13 +337,6 @@ while True:
 
         elif event.type == BABY_EVENT:
             boss.release_baby(babies, baby_img, screen)
-
-        elif event.type == BOSSFLASH_EVENT:
-            boss.change_colour()
-            pygame.time.set_timer(BOSSFLASH_EVENT, 0)
-
-        elif event.type == ENERGY_EVENT:
-            boss.set_energy(1)
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -341,18 +362,22 @@ while True:
 
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
-        dragon.hit()
+        dragon.hit_by_demon()
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
-        dragon.set_score(15)
+        #dragon.set_score(15)
+        dragon.caught_baby()
     if (pygame.sprite.spritecollide(boss, fireballs, True, pygame.sprite.collide_mask)):
-        print "#boss is hit"
+        print "#hit boss"
         boss.hit()
+        dragon.hit_boss()
     if (pygame.sprite.groupcollide(fireballs, demons, True, True)):
-        print "#fireball hit demon"
-        dragon.set_score(10)
+        print "#hit demon"
+        #dragon.set_score(10)
+        dragon.hit_demon()
         demon_hit_snd.play()
     if (pygame.sprite.groupcollide(fireballs, babies, True, True)):
-        print "#fireball hit baby"
-        dragon.set_score(-15)
+        print "#hit baby"
+        #dragon.set_score(-15)
+        dragon.hit_baby()
         baby_hit_snd.play()
