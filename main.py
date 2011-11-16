@@ -14,6 +14,7 @@ PANDORA = 800, 480
 DEMON_EVENT = USEREVENT+1
 BABY_EVENT = USEREVENT+2
 BOSSFLASH_EVENT = USEREVENT+3
+ENERGY_EVENT = USEREVENT+4
 TRANSPARENT = 0, 0, 255
 
 images = {'DRAGON' : 0, 'BOSS' : 0, 'FIREBALL' : 0, 'DEMON' : 0, 'BABY' : 0}
@@ -143,15 +144,14 @@ class Boss(pygame.sprite.Sprite):
         self.sound_hit = hit_sound
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
         pygame.time.set_timer(BABY_EVENT, random.randint(1500, 7500))
+        pygame.time.set_timer(ENERGY_EVENT, 1000)
 
     def release_demon(self, spritelist, image, screen):
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
-        print "DEMON!"
         spritelist.add(Demon(image, self.rect, screen))
 
     def release_baby(self, spritelist, image, screen):
         pygame.time.set_timer(BABY_EVENT, random.randint(1500, 7500))
-        print "BABY!"
         spritelist.add(Baby(image, self.rect, screen))
 
     def change_colour(self):
@@ -160,17 +160,34 @@ class Boss(pygame.sprite.Sprite):
         else:
             self.image = self.image_hit
 
+    def set_energy(self, d):
+        self.energy += d
+        self.energy = min(199, self.energy)
+
     def hit(self):
         self.sound_hit.play()
-        self.energy -= 10
-        print self.energy
-        if self.energy < 0:
+        self.set_energy(-10)
+        if self.energy <= 0:
             print "You defeated the Boss"
             pygame.event.post(pygame.event.Event(QUIT))
         self.change_colour()
         pygame.time.set_timer(BOSSFLASH_EVENT, 50)
 
+    def draw_healthbar(self):
+        rect = Rect(self.rect.left, self.rect.bottom-4, self.energy, 4)
+        if (self.energy > 65):
+            col = 0, 255, 0
+        elif (self.energy > 25):
+            col = 255, 255, 0
+        else:
+            col = 255, 0, 0
+        self.screen.fill(col, rect)
+        rect = Rect(self.rect.left, self.rect.bottom-8, self.energy, 16)
+        pygame.display.update(rect)
+
     def update(self):
+        #self.energy += 1
+        #self.energy = min(100, self.energy)
         if self.direction == 1:
             #move_up
             self.rect.top -= self.step
@@ -181,6 +198,7 @@ class Boss(pygame.sprite.Sprite):
             self.rect.top += self.step
             if self.rect.bottom >= self.screen_size[1]:
                 self.direction = 1
+        self.draw_healthbar()
 
 class Dragon(pygame.sprite.Sprite):
     def __init__(self, image, screen):
@@ -208,13 +226,11 @@ class Dragon(pygame.sprite.Sprite):
         self.rect = rect
 
     def fire(self, spritelist, image, screen):
-        print "VUUR!"
         if self.timer < pygame.time.get_ticks():
             spritelist.add(Fireball(image, self.rect, screen))
             self.timer = pygame.time.get_ticks() + 500
 
     def hit(self):
-        print "AU!"
         self.lives -= 1
         if self.lives < 0:
             print "GAME OVER"
@@ -255,6 +271,9 @@ while True:
         elif event.type == BOSSFLASH_EVENT:
             boss.change_colour()
             pygame.time.set_timer(BOSSFLASH_EVENT, 0)
+
+        elif event.type == ENERGY_EVENT:
+            boss.set_energy(1)
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
