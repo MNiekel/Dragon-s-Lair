@@ -22,7 +22,6 @@ images = {'DRAGON' : 0, 'BOSS' : 0, 'FIREBALL' : 0, 'DEMON' : 0, 'BABY' : 0}
 class Gamecontrol():
     def __init__(self):
         self.sprites = []
-        print "created?"
 
     def add_sprite(self, sprite):
         self.sprites.append(sprite)
@@ -238,7 +237,6 @@ class Dragon(pygame.sprite.Sprite):
 
     def set_score(self, points):
         self.score += points
-        print max(0, self.score)
 
 screen, background = init_screen(PANDORA)
 pygame.display.flip()
