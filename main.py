@@ -335,7 +335,24 @@ class Fireball(Object):
             self.kill()
             del self
 
+class Text():
+    def __init__(self, text, screen):
+        self.font = pygame.font.SysFont('Comic Sans MS', 18)
+        self.size = self.font.size(text)
+        print self.size
+        self.surface = self.font.render(text, True, (128, 128, 128))
+        rect = self.surface.get_rect()
+        rect.topleft = (0, 0)
+        screen.blit(self.surface, rect)
+        self.screen = screen
+
+    def get_text(self):
+        return self.surface
+
 screen, background = init_screen(PANDORA)
+
+score = Text("Score", screen)
+
 pygame.display.flip()
 dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
 boss_hit_snd, baby_hit_snd, demon_hit_snd = init_sound()
@@ -389,6 +406,8 @@ while True:
     pygame.display.update(demons.draw(screen))
     pygame.display.update(babies.draw(screen))
     screen.blit(background, [0, 0])
+    screen.blit(score.get_text(), [0, 0])
+    print score.get_text()
 
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
