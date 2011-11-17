@@ -16,6 +16,10 @@ BABY_EVENT = USEREVENT+2
 
 TRANSPARENT = 0, 0, 255
 BLACK = 0, 0, 0
+WHITE = 255, 255, 255
+YELLOW = 255, 255, 0
+RED = 255, 0, 0
+GREEN = 0, 255, 0
 
 images = {'DRAGON' : 0, 'BOSS' : 0, 'FIREBALL' : 0, 'DEMON' : 0, 'BABY' : 0}
 
@@ -258,7 +262,7 @@ class Healthbar(Object):
         elif (health > 10):
             col = 255, 255 + x, 0
         else:
-            col = 255, 0, 0
+            col = RED
             
         self.image.fill(TRANSPARENT)
         self.image.fill(col, Rect(0, 0, health, 8))
@@ -335,23 +339,58 @@ class Fireball(Object):
             self.kill()
             del self
 
-class Text():
-    def __init__(self, text, screen):
-        self.font = pygame.font.SysFont('Comic Sans MS', 18)
-        self.size = self.font.size(text)
-        print self.size
-        self.surface = self.font.render(text, True, (128, 128, 128))
-        rect = self.surface.get_rect()
-        rect.topleft = (0, 0)
-        screen.blit(self.surface, rect)
-        self.screen = screen
+class Text(pygame.Surface):
+    def __init__(self, text, color = WHITE,
+                fonttype = 'Comic Sans MS', fontsize = 24):
 
-    def get_text(self):
-        return self.surface
+        self.font = pygame.font.SysFont(fonttype, fontsize)
+        self.size = self.font.size(text)
+        self.text = text
+        self.color = color
+
+        pygame.Surface.__init__(self, self.size)
+
+        surface = self.font.render(text, False, color, TRANSPARENT)
+        rect = surface.get_rect()
+        rect.topleft = (0, 0)
+        self.set_colorkey(TRANSPARENT)
+        self.blit(surface, rect)
+
+class Score(pygame.Surface):
+    def __init__(self, screen):
+        self.font = pygame.font.SysFont('Comic Sans MS', 24)
+        pygame.Surface.__init__(self, self.font.size("Score: 0000"))
+
+        surface = Text("Score: ", WHITE)
+
+        self.rect = self.get_rect()
+        self.text_rect = surface.get_rect()
+        self.text_rect.topleft = (0, 0)
+
+        left = self.text_rect.right
+        width = self.rect.right - self.text_rect.right
+        self.score_rect = Rect(left, self.rect.top, width, self.rect.height)
+
+        self.fill(TRANSPARENT)
+        self.set_colorkey(TRANSPARENT)
+
+        self.blit(surface, self.text_rect)
+        screen.blit(self, self.text_rect)
+
+    def update(self, score):
+        surface = Text(str(score))
+        #surface = self.font.render(str(score), False, WHITE, TRANSPARENT)
+        rect = surface.get_rect()
+        rect.bottomright = self.get_rect().bottomright
+
+        self.fill(TRANSPARENT, self.score_rect)
+
+        self.blit(surface, rect)
+        screen.blit(self, self.rect)
+        pygame.display.update(self.score_rect)
 
 screen, background = init_screen(PANDORA)
-
-score = Text("Score", screen)
+score = Score(screen)
 
 pygame.display.flip()
 dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
@@ -377,6 +416,7 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             print dragon.score
+            pygame.time.wait(5000)
             sys.exit()
 
         elif event.type == DEMON_EVENT:
@@ -400,14 +440,14 @@ while True:
     demons.update()
     babies.update()
     healthbar.move(boss.rect, boss.energy)
+    score.update(dragon.score)
 
     pygame.display.update(rendering.draw(screen))
     pygame.display.update(fireballs.draw(screen))
     pygame.display.update(demons.draw(screen))
     pygame.display.update(babies.draw(screen))
     screen.blit(background, [0, 0])
-    screen.blit(score.get_text(), [0, 0])
-    print score.get_text()
+    screen.blit(score, [0, 0])
 
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
