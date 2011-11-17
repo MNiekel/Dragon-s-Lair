@@ -240,20 +240,15 @@ class Boss(Object):
             if self.rect.bottom >= self.screen_size[1]:
                 self.direction = 1
 
-class Healthbar(Object):
-    def __init__(self, screen, rect): #rect is rectangle of Boss
-        bar = pygame.Surface((100, 8)).convert()
-        bar.set_colorkey(TRANSPARENT)
+class Healthbar(pygame.Surface):
+    def __init__(self, screen):
+        pygame.Surface.__init__(self, (100, 8))
+        self.convert()
+        self.set_colorkey(TRANSPARENT)
 
-        Object.__init__(self, bar, screen)
+        self.screen = screen
 
-        self.rect.left = rect.left
-        self.rect.bottom = rect.bottom
-
-    def move(self, rect, health):
-        self.rect.left = rect.left
-        self.rect.bottom = rect.bottom
-
+    def update(self, bossrect, health):
         health = min(100, health)
 
         x = (255 * health)/50 - 255
@@ -264,9 +259,17 @@ class Healthbar(Object):
             col = 255, 255 + x, 0
         else:
             col = RED
-            
-        self.image.fill(TRANSPARENT)
-        self.image.fill(col, Rect(0, 0, health, 8))
+
+        self.fill(TRANSPARENT)
+        self.fill(col, Rect(0, 0, health, 8))
+
+        rect = self.get_rect()
+        pygame.display.update(rect)
+
+        rect.left = bossrect.left
+        rect.bottom = bossrect.bottom
+
+        self.screen.blit(self, rect)
 
 class Dragon(Object):
     def __init__(self, image, screen):
@@ -401,11 +404,10 @@ rendering = pygame.sprite.RenderUpdates()
 dragon = Dragon(dragon_img, screen)
 boss = Boss(boss_img, boss_hit_img, screen)
 
-healthbar = Healthbar(screen, boss.rect)
+healthbar = Healthbar(screen)
 
 rendering.add(dragon)
 rendering.add(boss)
-rendering.add(healthbar)
 
 fireballs = pygame.sprite.RenderUpdates()
 demons = pygame.sprite.RenderUpdates()
@@ -440,13 +442,14 @@ while True:
     fireballs.update()
     demons.update()
     babies.update()
-    healthbar.move(boss.rect, boss.energy)
     score.update(dragon.score)
+    healthbar.update(boss.rect, boss.energy)
 
     pygame.display.update(rendering.draw(screen))
     pygame.display.update(fireballs.draw(screen))
     pygame.display.update(demons.draw(screen))
     pygame.display.update(babies.draw(screen))
+    screen.blit(healthbar, [boss.rect.left, boss.rect.bottom])
     screen.blit(background, [0, 0])
     screen.blit(score, [0, 0])
 
