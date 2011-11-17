@@ -123,8 +123,9 @@ def init_sound():
     boss_hit = pygame.mixer.Sound("resources\Boss_Hit.wav")
     baby_hit = pygame.mixer.Sound("resources\Baby_Hit.wav")
     demon_hit = pygame.mixer.Sound("resources\Demon_Hit.wav")
+    dragon_hit = pygame.mixer.Sound("resources\Dragon_Hit.wav")
 
-    return boss_hit, baby_hit, demon_hit
+    return boss_hit, baby_hit, demon_hit, dragon_hit
 
 class Baby(pygame.sprite.Sprite):
     def __init__(self, image, position, screen):
@@ -394,7 +395,7 @@ score = Score(screen)
 
 pygame.display.flip()
 dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
-boss_hit_snd, baby_hit_snd, demon_hit_snd = init_sound()
+boss_hit_snd, baby_hit_snd, demon_hit_snd, dragon_hit_snd = init_sound()
 rendering = pygame.sprite.RenderUpdates()
 
 dragon = Dragon(dragon_img, screen)
@@ -452,6 +453,7 @@ while True:
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
         dragon.hit_by_demon()
+        dragon_hit_snd.play()
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
         #dragon.set_score(15)
@@ -460,6 +462,7 @@ while True:
         print "#hit boss"
         boss.hit()
         dragon.hit_boss()
+        boss_hit_snd.play()
     if (pygame.sprite.groupcollide(fireballs, demons, True, True)):
         print "#hit demon"
         #dragon.set_score(10)
