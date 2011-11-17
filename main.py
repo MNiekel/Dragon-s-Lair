@@ -182,7 +182,7 @@ class Boss(Object):
         self.step = 8
         self.energy = 100
         self.flash = -1
-        self.autoheal = 250 #heal every autoheal updates
+        self.autoheal = 50 #heal every autoheal updates
 
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
         pygame.time.set_timer(BABY_EVENT, random.randint(1500, 7500))
@@ -220,7 +220,9 @@ class Boss(Object):
 
         if self.autoheal < 0:
             self.energy += 1
-            self.autoheal = 250
+            self.autoheal = 50
+        else:
+            self.autoheal -= 1
 
         if self.direction == 1:
             #move_up
@@ -246,6 +248,8 @@ class Healthbar(Object):
     def move(self, rect, health):
         self.rect.left = rect.left
         self.rect.bottom = rect.bottom
+
+        health = min(100, health)
 
         x = (255 * health)/50 - 255
 
@@ -299,6 +303,10 @@ class Dragon(Object):
         self.score = max(0, self.score)
 
     def hit_by_demon(self):
+        self.lives -= 1
+        if self.lives < 0:
+            print "GAME OVER"
+            pygame.event.post(pygame.event.Event(QUIT))
         self.score = max(0, self.score - 10)
 
     def hit_baby(self):
