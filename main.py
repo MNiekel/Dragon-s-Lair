@@ -6,6 +6,7 @@ import mysprite
 import boss
 import dragon
 import soundcontroller
+import imagecontroller
 import textsurface
 
 from globals import *
@@ -24,22 +25,6 @@ def init_screen(size):
     screen.blit(bg_image, [0, 0])
 
     return screen, bg_image
-
-def load_image(filename):
-    img = pygame.image.load(filename).convert()
-    img.set_colorkey(TRANSPARENT)
-
-    return img
-
-def init_images():
-    dragon = load_image("resources/Dragon.gif")
-    boss = load_image("resources/Boss.gif")
-    boss_hit = load_image("resources/Boss_Hit.gif")
-    fireball = load_image("resources/Fireball.gif")
-    demon = load_image("resources/Demon.gif")
-    baby = load_image("resources/Baby.gif")
-
-    return dragon, boss, boss_hit, fireball, demon, baby
 
 class Healthbar(pygame.Surface):
     def __init__(self, screen):
@@ -108,27 +93,31 @@ class Score(pygame.Surface):
         self.screen.blit(self, self.rect)
         pygame.display.update(self.score_rect)
 
+
 screen, background = init_screen(PANDORA)
 score = Score(screen)
 healthbar = Healthbar(screen)
+lives = textsurface.TextSurface("Lives: ")
+screen.blit(lives, [300, 0])
 
 pygame.display.flip()
 
 sound = soundcontroller.SoundController()
+images = imagecontroller.ImageController()
+
 sound.play_music()
+dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = images.get_images()
 
-dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
-
-rendering = pygame.sprite.RenderUpdates()
 dragon = dragon.Dragon(dragon_img, screen)
 boss = boss.Boss(boss_img, boss_hit_img, screen)
 
-rendering.add(dragon)
-rendering.add(boss)
-
+rendering = pygame.sprite.RenderUpdates()
 fireballs = pygame.sprite.RenderUpdates()
 demons = pygame.sprite.RenderUpdates()
 babies = pygame.sprite.RenderUpdates()
+
+rendering.add(dragon)
+rendering.add(boss)
 
 while True:
     clock.tick(30)
