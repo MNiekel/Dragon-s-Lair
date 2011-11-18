@@ -6,6 +6,7 @@ import mysprite
 import boss
 import dragon
 import soundcontroller
+import textsurface
 
 from globals import *
 from pygame.locals import *
@@ -35,14 +36,17 @@ def init_images():
     boss = load_image("resources/Boss.gif")
     boss_hit = load_image("resources/Boss_Hit.gif")
     fireball = load_image("resources/Fireball.gif")
-    demon = load_image("resources/Demon2.gif")
+    demon = load_image("resources/Demon.gif")
     baby = load_image("resources/Baby.gif")
 
     return dragon, boss, boss_hit, fireball, demon, baby
 
 class Healthbar(pygame.Surface):
     def __init__(self, screen):
-        pygame.Surface.__init__(self, (100, 8))
+        self.width = 120
+        self.height = 8
+        self.size = (self.width, self.height)
+        pygame.Surface.__init__(self, self.size)
         self.convert()
         self.set_colorkey(TRANSPARENT)
 
@@ -55,13 +59,13 @@ class Healthbar(pygame.Surface):
 
         if (health > 50):
             col = 255 - x, 255, 0
-        elif (health > 10):
+        elif (health > 8):
             col = 255, 255 + x, 0
         else:
             col = RED
 
         self.fill(TRANSPARENT)
-        self.fill(col, Rect(0, 0, health, 8))
+        self.fill(col, Rect(0, 0, health * self.width / 100, 8))
 
         rect = self.get_rect()
         pygame.display.update(rect)
@@ -71,29 +75,12 @@ class Healthbar(pygame.Surface):
 
         self.screen.blit(self, rect)
 
-class Text(pygame.Surface):
-    def __init__(self, text, color = WHITE,
-                fonttype = 'Comic Sans MS', fontsize = 24):
-
-        self.font = pygame.font.SysFont(fonttype, fontsize)
-        self.size = self.font.size(text)
-        self.text = text
-        self.color = color
-
-        pygame.Surface.__init__(self, self.size)
-
-        surface = self.font.render(text, False, color, TRANSPARENT)
-        rect = surface.get_rect()
-        rect.topleft = (0, 0)
-        self.set_colorkey(TRANSPARENT)
-        self.blit(surface, rect)
-
 class Score(pygame.Surface):
     def __init__(self, screen):
         self.font = pygame.font.SysFont('Comic Sans MS', 24)
         pygame.Surface.__init__(self, self.font.size("Score: 0000"))
 
-        surface = Text("Score: ", WHITE)
+        surface = textsurface.TextSurface("Score: ", WHITE)
         self.screen = screen
 
         self.rect = self.get_rect()
@@ -111,7 +98,7 @@ class Score(pygame.Surface):
         self.screen.blit(self, self.text_rect)
 
     def update(self, score):
-        surface = Text(str(score))
+        surface = textsurface.TextSurface(str(score))
         rect = surface.get_rect()
         rect.bottomright = self.get_rect().bottomright
 
