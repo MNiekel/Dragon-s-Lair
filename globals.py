@@ -1,0 +1,13 @@
+import pygame
+from pygame.locals import *
+
+PANDORA = 800, 480
+BABY_EVENT = USEREVENT + 1
+DEMON_EVENT = USEREVENT + 2
+
+TRANSPARENT = 0, 0, 255
+BLACK = 0, 0, 0
+WHITE = 255, 255, 255
+YELLOW = 255, 255, 0
+RED = 255, 0, 0
+GREEN = 0, 255, 0
