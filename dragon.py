@@ -1,6 +1,7 @@
 import pygame
 import mysprite
 import random
+
 from pygame.locals import *
 from globals import *
 
@@ -13,12 +14,6 @@ class Dragon(mysprite.MySprite):
         self.timer = 0
         self.lives = 3
         self.score = 0
-
-    def set_sounds(self, hit_by_demon, caught_baby, hit_demon, hit_baby):
-        self.snd_hit_by_demon = hit_by_demon
-        self.snd_caught_baby = caught_baby
-        self.snd_hit_demon = hit_demon
-        self.snd_hit_baby = hit_baby
 
     def move(self, key):
         rect = self.rect
@@ -50,7 +45,6 @@ class Dragon(mysprite.MySprite):
         self.score = max(0, self.score)
 
     def hit_by_demon(self):
-        #play self.snd_hit_by_demon
         self.lives -= 1
         if self.lives < 0:
             print "GAME OVER"
@@ -58,15 +52,12 @@ class Dragon(mysprite.MySprite):
         self.score = max(0, self.score - 10)
 
     def hit_baby(self):
-        #play self.snd_hit_baby
         self.score = max(0, self.score - 20)
 
     def hit_demon(self):
-        #play self.snd_hit_demon
         self.score += 5
 
     def caught_baby(self):
-        #play self.snd_caught_baby
         self.score += 10
 
 class Fireball(mysprite.MySprite):

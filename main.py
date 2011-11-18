@@ -5,8 +5,11 @@ import random
 import mysprite
 import boss
 import dragon
+import soundcontroller
+
 from globals import *
 from pygame.locals import *
+from soundcontroller import *
 
 pygame.mixer.pre_init(44100, -16, 2, 2048)
 pygame.init()
@@ -21,8 +24,8 @@ def init_screen(size):
 
     return screen, bg_image
 
-def load_image(file):
-    img = pygame.image.load(file).convert()
+def load_image(filename):
+    img = pygame.image.load(filename).convert()
     img.set_colorkey(TRANSPARENT)
 
     return img
@@ -36,24 +39,6 @@ def init_images():
     baby = load_image("resources/Baby.gif")
 
     return dragon, boss, boss_hit, fireball, demon, baby
-
-def init_music(filename):
-    pygame.mixer.music.load(filename)
-    pygame.mixer.music.set_volume(0.5)
-    pygame.mixer.music.play(-1)
-
-def load_sound(filename):
-    return pygame.mixer.Sound(filename)
-
-def init_sounds():
-    init_music("resources/Music.mp3")
-
-    boss_hit = load_sound("resources/Boss_Hit.wav")
-    baby_hit = load_sound("resources/Baby_Hit.wav")
-    demon_hit = load_sound("resources/Demon_Hit.wav")
-    dragon_hit = load_sound("resources/Dragon_Hit.wav")
-
-    return boss_hit, baby_hit, demon_hit, dragon_hit
 
 class Healthbar(pygame.Surface):
     def __init__(self, screen):
@@ -109,6 +94,7 @@ class Score(pygame.Surface):
         pygame.Surface.__init__(self, self.font.size("Score: 0000"))
 
         surface = Text("Score: ", WHITE)
+        self.screen = screen
 
         self.rect = self.get_rect()
         self.text_rect = surface.get_rect()
@@ -122,32 +108,33 @@ class Score(pygame.Surface):
         self.set_colorkey(TRANSPARENT)
 
         self.blit(surface, self.text_rect)
-        screen.blit(self, self.text_rect)
+        self.screen.blit(self, self.text_rect)
 
     def update(self, score):
         surface = Text(str(score))
-        #surface = self.font.render(str(score), False, WHITE, TRANSPARENT)
         rect = surface.get_rect()
         rect.bottomright = self.get_rect().bottomright
 
         self.fill(TRANSPARENT, self.score_rect)
 
         self.blit(surface, rect)
-        screen.blit(self, self.rect)
+        self.screen.blit(self, self.rect)
         pygame.display.update(self.score_rect)
 
 screen, background = init_screen(PANDORA)
 score = Score(screen)
+healthbar = Healthbar(screen)
 
 pygame.display.flip()
-dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
-boss_hit_snd, baby_hit_snd, demon_hit_snd, dragon_hit_snd = init_sounds()
-rendering = pygame.sprite.RenderUpdates()
 
+sound = soundcontroller.SoundController()
+sound.play_music()
+
+dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = init_images()
+
+rendering = pygame.sprite.RenderUpdates()
 dragon = dragon.Dragon(dragon_img, screen)
 boss = boss.Boss(boss_img, boss_hit_img, screen)
-
-healthbar = Healthbar(screen)
 
 rendering.add(dragon)
 rendering.add(boss)
@@ -192,6 +179,7 @@ while True:
     pygame.display.update(fireballs.draw(screen))
     pygame.display.update(demons.draw(screen))
     pygame.display.update(babies.draw(screen))
+
     screen.blit(healthbar, [boss.rect.left, boss.rect.bottom])
     screen.blit(background, [0, 0])
     screen.blit(score, [0, 0])
@@ -199,19 +187,20 @@ while True:
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
         dragon.hit_by_demon()
-        dragon_hit_snd.play()
+        sound.play_sound(hit_by_demon_snd)
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
         dragon.caught_baby()
+        sound.play_sound(caught_baby_snd)
     if (pygame.sprite.spritecollide(boss, fireballs, True, pygame.sprite.collide_mask)):
         print "#hit boss"
         boss.hit()
-        boss_hit_snd.play()
+        sound.play_sound(hit_boss_snd)
     if (pygame.sprite.groupcollide(fireballs, demons, True, True)):
         print "#hit demon"
         dragon.hit_demon()
-        demon_hit_snd.play()
+        sound.play_sound(hit_demon_snd)
     if (pygame.sprite.groupcollide(fireballs, babies, True, True)):
         print "#hit baby"
         dragon.hit_baby()
-        baby_hit_snd.play()
+        sound.play_sound(hit_baby_snd)

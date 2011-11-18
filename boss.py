@@ -1,6 +1,7 @@
 import pygame
 import mysprite
 import random
+
 from pygame.locals import *
 from globals import *
 
@@ -35,11 +36,7 @@ class Boss(mysprite.MySprite):
     def set_energy(self, d):
         self.energy = min(100, self.energy + d)
 
-    def set_sounds(self, hit):
-        self.snd_hit = hit
-
     def hit(self):
-        #play self.snd_hit
         self.energy = min(100, self.energy - 10)
         if self.energy <= 0:
             print "You defeated the Boss"
