@@ -8,6 +8,7 @@ import dragon
 import soundcontroller
 import imagecontroller
 import textsurface
+import stats
 
 from globals import *
 from pygame.locals import *
@@ -26,79 +27,8 @@ def init_screen(size):
 
     return screen, bg_image
 
-class Healthbar(pygame.Surface):
-    def __init__(self, screen):
-        self.width = 120
-        self.height = 8
-        self.size = (self.width, self.height)
-        pygame.Surface.__init__(self, self.size)
-        self.convert()
-        self.set_colorkey(TRANSPARENT)
-
-        self.screen = screen
-
-    def update(self, bossrect, health):
-        health = min(100, health)
-
-        x = (255 * health)/50 - 255
-
-        if (health > 50):
-            col = 255 - x, 255, 0
-        elif (health > 8):
-            col = 255, 255 + x, 0
-        else:
-            col = RED
-
-        self.fill(TRANSPARENT)
-        self.fill(col, Rect(0, 0, health * self.width / 100, 8))
-
-        rect = self.get_rect()
-        pygame.display.update(rect)
-
-        rect.left = bossrect.left
-        rect.bottom = bossrect.bottom
-
-        self.screen.blit(self, rect)
-
-class Score(pygame.Surface):
-    def __init__(self, screen):
-        self.font = pygame.font.SysFont('Comic Sans MS', 24)
-        pygame.Surface.__init__(self, self.font.size("Score: 0000"))
-
-        surface = textsurface.TextSurface("Score: ", WHITE)
-        self.screen = screen
-
-        self.rect = self.get_rect()
-        self.text_rect = surface.get_rect()
-        self.text_rect.topleft = (0, 0)
-
-        left = self.text_rect.right
-        width = self.rect.right - self.text_rect.right
-        self.score_rect = Rect(left, self.rect.top, width, self.rect.height)
-
-        self.fill(TRANSPARENT)
-        self.set_colorkey(TRANSPARENT)
-
-        self.blit(surface, self.text_rect)
-        self.screen.blit(self, self.text_rect)
-
-    def update(self, score):
-        surface = textsurface.TextSurface(str(score))
-        rect = surface.get_rect()
-        rect.bottomright = self.get_rect().bottomright
-
-        self.fill(TRANSPARENT, self.score_rect)
-
-        self.blit(surface, rect)
-        self.screen.blit(self, self.rect)
-        pygame.display.update(self.score_rect)
-
-
 screen, background = init_screen(PANDORA)
-score = Score(screen)
-healthbar = Healthbar(screen)
-lives = textsurface.TextSurface("Lives: ")
-screen.blit(lives, [300, 0])
+stats = stats.Stats(screen)
 
 pygame.display.flip()
 
@@ -143,22 +73,23 @@ while True:
                 fireball = dragon.fire(fireball_img)
                 if fireball != None:
                     fireballs.add(fireball)
+            if event.key == K_a:
+                #pygame.display.update(tekstje.get_rect())
+                #print tekstje.get_rect()
+                pass
 
     rendering.update()
     fireballs.update()
     demons.update()
     babies.update()
-    score.update(dragon.score)
-    healthbar.update(boss.rect, boss.energy)
+    stats.update(dragon, boss)
 
     pygame.display.update(rendering.draw(screen))
     pygame.display.update(fireballs.draw(screen))
     pygame.display.update(demons.draw(screen))
     pygame.display.update(babies.draw(screen))
 
-    screen.blit(healthbar, [boss.rect.left, boss.rect.bottom])
     screen.blit(background, [0, 0])
-    screen.blit(score, [0, 0])
 
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"

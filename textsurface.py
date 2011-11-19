@@ -15,8 +15,18 @@ class TextSurface(pygame.Surface):
 
         pygame.Surface.__init__(self, self.size)
 
-        surface = self.font.render(text, False, color, bgcolor).convert()
-        rect = surface.get_rect()
+        self.rect = pygame.Surface.get_rect(self)
+        self.text = self.font.render(text, False, color, bgcolor).convert()
+        rect = self.text.get_rect()
         rect.topleft = (0, 0)
         self.set_colorkey(TRANSPARENT)
-        self.blit(surface, rect)
+        self.blit(self.text, rect)
+
+    def set_position(self, pos, screen):
+        self.rect.topleft = pos
+
+    def get_rect(self):
+        return self.rect
+
+    def update(self, screen):
+        screen.blit(self, self.rect)
