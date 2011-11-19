@@ -14,9 +14,12 @@ class SoundController(object):
         self.sounds = {}
         self.init_music("resources/Music.mp3")
         self.init_sounds()
+        self.music = False
+        self.pause = False
 
     def play_music(self):
         pygame.mixer.music.play(-1)
+        self.music = True
 
     def init_music(self, filename):
         pygame.mixer.music.load(filename)
@@ -34,3 +37,34 @@ class SoundController(object):
 
     def play_sound(self, snd_id):
         self.sounds[snd_id].play()
+
+    def toggle_music(self):
+        if self.music:
+            if self.pause:
+                pygame.mixer.music.unpause()
+                self.pause = False
+            else:
+                pygame.mixer.music.pause()
+                self.pause = True
+
+    def volume_up(self):
+        volume = self.sounds[hit_boss_snd].get_volume()
+        if (volume < 1.0):
+            volume = min(volume+0.1, 1.0)
+            self.sounds[hit_boss_snd].set_volume(volume)
+            self.sounds[hit_baby_snd].set_volume(volume)
+            self.sounds[hit_demon_snd].set_volume(volume)
+            self.sounds[hit_by_demon_snd].set_volume(volume)
+            self.sounds[caught_baby_snd].set_volume(volume)
+        print volume
+
+    def volume_down(self):
+        volume = self.sounds[hit_boss_snd].get_volume()
+        if (volume > 0.0):
+            volume = max(volume-0.1, 0.0)
+            self.sounds[hit_boss_snd].set_volume(volume)
+            self.sounds[hit_baby_snd].set_volume(volume)
+            self.sounds[hit_demon_snd].set_volume(volume)
+            self.sounds[hit_by_demon_snd].set_volume(volume)
+            self.sounds[caught_baby_snd].set_volume(volume)
+        print volume

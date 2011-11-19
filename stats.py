@@ -5,8 +5,8 @@ from pygame.locals import *
 from globals import *
 
 class Stats(object):
-    def __init__(self, screen):
-        self.lives = Lives(screen)
+    def __init__(self, screen, heart):
+        self.lives = Lives(screen, heart)
         self.score = Score(screen)
         self.healthbar = Healthbar(screen)
         self.screen = screen
@@ -85,7 +85,7 @@ class Score(pygame.Surface):
 
 
 class Lives(object):
-    def __init__(self, screen):
+    def __init__(self, screen, heart):
         self.font = pygame.font.SysFont('Comic Sans MS', 24)
         self.text = textsurface.TextSurface("Lives: ", WHITE)
         self.screen = screen
@@ -93,25 +93,23 @@ class Lives(object):
 
         self.screen.blit(self.text, self.text.get_rect())
 
-        self.heart = pygame.Surface((32, 32)).convert()
-        self.heart.set_colorkey(TRANSPARENT)
-        self.heart.fill(RED)
-        self.heartrect = self.heart.get_rect()
-        #self.heartrect.topleft = self.text.get_rect().topright
+        self.clear = pygame.Surface((32, 32)).convert()
+        self.clear.set_colorkey(TRANSPARENT)
+        self.clear.fill(TRANSPARENT)
+        self.heart = heart
 
     def update(self, lives):
         self.screen.blit(self.text, self.text.get_rect())
         pygame.display.update(self.text.get_rect())
-        self.heart.fill(RED)
-        rect = self.heartrect
+        self.clear.fill(TRANSPARENT)
+        rect = self.clear.get_rect()
         rect.topleft = self.text.get_rect().topright
-        for i in range(0, 3):
+        for i in range(0, lives+1):
             if (i < lives):
-                self.screen.blit(self.heart, self.heartrect)
+                self.screen.blit(self.heart, rect)
                 pygame.display.update(rect)
                 rect.topleft = rect.topright
             else:
-                self.heart.fill(TRANSPARENT)
-                self.screen.blit(self.heart, self.heartrect)
+                self.screen.blit(self.clear, rect)
                 pygame.display.update(rect)
                 rect.topleft = rect.topright

@@ -34,22 +34,17 @@ class Dragon(mysprite.MySprite):
         else:
             return None
 
-    def hit(self):
-        self.lives -= 1
-        if self.lives < 0:
-            print "GAME OVER"
-            pygame.event.post(pygame.event.Event(QUIT))
-
     def set_score(self, points):
         self.score += points
         self.score = max(0, self.score)
 
     def hit_by_demon(self):
         self.lives -= 1
-        if self.lives < 0:
+        if self.lives <= 0:
             print "GAME OVER"
-            pygame.event.post(pygame.event.Event(QUIT))
+            return True
         self.score = max(0, self.score - 10)
+        return False
 
     def hit_baby(self):
         self.score = max(0, self.score - 20)

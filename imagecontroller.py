@@ -20,6 +20,7 @@ class ImageController(object):
         self.fireball = self.load_image("resources/Fireball.gif")
         self.demon = self.load_image("resources/Demon.gif")
         self.baby = self.load_image("resources/Baby.gif")
+        self.heart = self.load_image("resources/Heart.gif")
 
     def get_images(self):
-        return self.dragon, self.boss, self.boss_hit, self.fireball, self.demon, self.baby
+        return self.dragon, self.boss, self.boss_hit, self.fireball, self.demon, self.baby, self.heart

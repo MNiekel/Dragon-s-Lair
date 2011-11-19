@@ -28,16 +28,15 @@ def init_screen(size):
     return screen, bg_image
 
 screen, background = init_screen(PANDORA)
-stats = stats.Stats(screen)
-
-pygame.display.flip()
 
 sound = soundcontroller.SoundController()
 images = imagecontroller.ImageController()
+dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img, heart_img = images.get_images()
+
+stats = stats.Stats(screen, heart_img)
+pygame.display.flip()
 
 sound.play_music()
-dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img = images.get_images()
-
 dragon = dragon.Dragon(dragon_img, screen)
 boss = boss.Boss(boss_img, boss_hit_img, screen)
 
@@ -76,7 +75,15 @@ while True:
             if event.key == K_a:
                 #pygame.display.update(tekstje.get_rect())
                 #print tekstje.get_rect()
-                pass
+                dragon.lives = 5
+
+        elif event.type == KEYUP:
+            if event.key == K_m:
+                sound.toggle_music()
+            if event.key == K_u:
+                sound.volume_up()
+            if event.key == K_d:
+                sound.volume_down()
 
     rendering.update()
     fireballs.update()
@@ -93,8 +100,12 @@ while True:
 
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
-        dragon.hit_by_demon()
+        killed = dragon.hit_by_demon()
         sound.play_sound(hit_by_demon_snd)
+        if killed:
+            stats.update(dragon, boss)
+            pygame.time.wait(5000)
+            sys.exit()
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
         dragon.caught_baby()
