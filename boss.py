@@ -20,6 +20,12 @@ class Boss(mysprite.MySprite):
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
         pygame.time.set_timer(BABY_EVENT, random.randint(1500, 7500))
 
+    def reset(self):
+        self.rect.topright = (self.screen_size[0] - 4, 200)
+        self.direction = 1
+        self.energy = 100
+        self.flash = -1
+
     def release_demon(self, spritelist, image, screen):
         pygame.time.set_timer(DEMON_EVENT, random.randint(2500, 4500))
         spritelist.add(Demon(image, self.rect, screen))

@@ -9,36 +9,61 @@ import soundcontroller
 import imagecontroller
 import textsurface
 import stats
+import gamecontroller
 
 from globals import *
 from pygame.locals import *
 from soundcontroller import *
+from imagecontroller import *
 
 pygame.mixer.pre_init(44100, -16, 2, 2048)
 pygame.init()
 pygame.key.set_repeat(1)
 clock = pygame.time.Clock()
 
-def init_screen(size):
-    screen = pygame.display.set_mode(size)
-    bg_image = pygame.image.load("resources/Background800x480.bmp").convert()
-    background = pygame.Surface(size)
-    screen.blit(bg_image, [0, 0])
+def restart_game(screen, dragon, boss, fireballs, demons, babies, stats):
+    dragon.reset()
+    boss.reset()
+    screen.blit(background, [0, 0])
+    pygame.display.flip()
+    stats.update(dragon, boss)
+    demons.empty()
+    fireballs.empty()
+    babies.empty()
+    pygame.event.clear()
 
-    return screen, bg_image
+def end_screen(screen, dragon, boss):
+    game_over = textsurface.TextSurface("GAME OVER!", RED, TRANSPARENT, 64)
+    rect = game_over.get_rect()
+    width = rect.width
+    height = rect.height
+    xpos = (screen.get_width() - rect.width) / 2
+    ypos = screen.get_height() / 2 - height
+    game_over.set_position((xpos, ypos), screen)
+    screen.blit(background, [0, 0])
+    screen.blit(game_over, game_over.get_rect())
+    pygame.display.flip()
+    pygame.event.clear()
+    while True:
+        event = pygame.event.poll()
+        if (event.type == KEYUP and event.key == K_SPACE):
+            break
 
-screen, background = init_screen(PANDORA)
+game = gamecontroller.Game(PANDORA)
+game.initialize()
 
-sound = soundcontroller.SoundController()
+screen = pygame.display.set_mode(PANDORA)
+
+sounds = soundcontroller.SoundController()
 images = imagecontroller.ImageController()
-dragon_img, boss_img, boss_hit_img, fireball_img, demon_img, baby_img, heart_img = images.get_images()
 
-stats = stats.Stats(screen, heart_img)
-pygame.display.flip()
+background = images.get_background()
+screen.blit(background, [0, 0])
 
-sound.play_music()
-dragon = dragon.Dragon(dragon_img, screen)
-boss = boss.Boss(boss_img, boss_hit_img, screen)
+stats = stats.Stats(screen, images.get_image(heart_img))
+
+dragon = dragon.Dragon(images.get_image(dragon_img), screen)
+boss = boss.Boss(images.get_image(boss_img), images.get_image(boss_hit_img), screen)
 
 rendering = pygame.sprite.RenderUpdates()
 fireballs = pygame.sprite.RenderUpdates()
@@ -48,20 +73,25 @@ babies = pygame.sprite.RenderUpdates()
 rendering.add(dragon)
 rendering.add(boss)
 
+pygame.display.flip()
+#sounds.play_music()
+pygame.time.wait(2000)
+sys.exit()
+
 while True:
     clock.tick(30)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            print dragon.score
-            pygame.time.wait(5000)
             sys.exit()
 
         elif event.type == DEMON_EVENT:
-            boss.release_demon(demons, demon_img, screen)
+            boss.release_demon(demons, images.get_image(demon_img), screen)
+            #game.release_demon()
 
         elif event.type == BABY_EVENT:
-            boss.release_baby(babies, baby_img, screen)
+            boss.release_baby(babies, images.get_image(baby_img), screen)
+            #game.release_baby()
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -69,22 +99,20 @@ while True:
             if event.key in (K_UP, K_DOWN):
                 dragon.move(event.key)
             if event.key == K_SPACE:
-                fireball = dragon.fire(fireball_img)
+                #game.fireball()
+                fireball = dragon.fire(images.get_image(fireball_img))
                 if fireball != None:
                     fireballs.add(fireball)
-            if event.key == K_a:
-                #pygame.display.update(tekstje.get_rect())
-                #print tekstje.get_rect()
-                dragon.lives = 5
 
         elif event.type == KEYUP:
             if event.key == K_m:
-                sound.toggle_music()
+                sounds.toggle_music()
             if event.key == K_u:
-                sound.volume_up()
+                sounds.volume_up()
             if event.key == K_d:
-                sound.volume_down()
+                sounds.volume_down()
 
+    #game.update()
     rendering.update()
     fireballs.update()
     demons.update()
@@ -98,27 +126,30 @@ while True:
 
     screen.blit(background, [0, 0])
 
+    #collision = game.collisions()
+    #case collision.type ==
     if (pygame.sprite.spritecollide(dragon, demons, True, None)):
         print "#hit by demon"
         killed = dragon.hit_by_demon()
-        sound.play_sound(hit_by_demon_snd)
+        sounds.play_sound(hit_by_demon_snd)
         if killed:
             stats.update(dragon, boss)
-            pygame.time.wait(5000)
-            sys.exit()
+            pygame.time.wait(1000)
+            end_screen(screen, dragon, boss)
+            restart_game(screen, dragon, boss, fireballs, demons, babies, stats)
     if (pygame.sprite.spritecollide(dragon, babies, True, None)):
         print "#caught baby"
         dragon.caught_baby()
-        sound.play_sound(caught_baby_snd)
+        sounds.play_sound(caught_baby_snd)
     if (pygame.sprite.spritecollide(boss, fireballs, True, pygame.sprite.collide_mask)):
         print "#hit boss"
         boss.hit()
-        sound.play_sound(hit_boss_snd)
+        sounds.play_sound(hit_boss_snd)
     if (pygame.sprite.groupcollide(fireballs, demons, True, True)):
         print "#hit demon"
         dragon.hit_demon()
-        sound.play_sound(hit_demon_snd)
+        sounds.play_sound(hit_demon_snd)
     if (pygame.sprite.groupcollide(fireballs, babies, True, True)):
         print "#hit baby"
         dragon.hit_baby()
-        sound.play_sound(hit_baby_snd)
+        sounds.play_sound(hit_baby_snd)

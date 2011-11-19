@@ -12,7 +12,13 @@ class Dragon(mysprite.MySprite):
         self.rect.topleft = (4, 200)
         self.step = 8
         self.timer = 0
-        self.lives = 3
+        self.lives = 1
+        self.score = 0
+
+    def reset(self):
+        self.rect.topleft = (4, 200)
+        self.timer = 0
+        self.lives = 1
         self.score = 0
 
     def move(self, key):
