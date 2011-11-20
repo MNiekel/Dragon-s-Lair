@@ -23,7 +23,7 @@ class Boss(mysprite.MySprite):
     def reset(self):
         self.rect.topright = (self.screen_size[0] - 4, 200)
         self.direction = 1
-        self.energy = 100
+        self.energy = 100 #%
         self.flash = -1
 
     def release_demon(self, spritelist, image, screen):

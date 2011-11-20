@@ -49,8 +49,8 @@ def end_screen(screen, dragon, boss):
         if (event.type == KEYUP and event.key == K_SPACE):
             break
 
-game = gamecontroller.Game(PANDORA)
-game.initialize()
+#game = gamecontroller.Game(PANDORA)
+#game.initialize()
 
 screen = pygame.display.set_mode(PANDORA)
 
@@ -74,9 +74,9 @@ rendering.add(dragon)
 rendering.add(boss)
 
 pygame.display.flip()
-#sounds.play_music()
-pygame.time.wait(2000)
-sys.exit()
+sounds.play_music()
+#pygame.time.wait(2000)
+#sys.exit()
 
 while True:
     clock.tick(30)
