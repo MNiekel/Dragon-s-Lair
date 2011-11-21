@@ -55,11 +55,11 @@ class Score(pygame.Surface):
         self.font = pygame.font.SysFont('Comic Sans MS', 24)
         pygame.Surface.__init__(self, self.font.size("Score: 0000"))
 
-        surface = textsurface.TextSurface("Score: ", WHITE)
+        self.text = textsurface.TextSurface("Score: ", WHITE)
         self.screen = screen
 
         self.rect = self.get_rect()
-        self.text_rect = surface.get_rect()
+        self.text_rect = self.text.get_rect()
         self.text_rect.topleft = (0, 0)
 
         left = self.text_rect.right
@@ -69,7 +69,7 @@ class Score(pygame.Surface):
         self.fill(TRANSPARENT)
         self.set_colorkey(TRANSPARENT)
 
-        self.blit(surface, self.text_rect)
+        self.blit(self.text, self.text_rect)
         self.screen.blit(self, self.text_rect)
 
     def update(self, score):
@@ -80,8 +80,10 @@ class Score(pygame.Surface):
         self.fill(TRANSPARENT, self.score_rect)
 
         self.blit(surface, rect)
+        self.blit(self.text, self.text_rect)
         self.screen.blit(self, self.rect)
         pygame.display.update(self.score_rect)
+        pygame.display.update(self.text_rect)
 
 
 class Lives(object):

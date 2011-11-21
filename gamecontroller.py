@@ -21,13 +21,13 @@ class Game(object):
         pygame.init()
         pygame.key.set_repeat(1)
         self.screen = pygame.display.set_mode(size)
+        self.timer = 0
 
     def initialize(self):
         self.sounds = soundcontroller.SoundController()
         self.images = imagecontroller.ImageController()
 
         self.background = self.images.get_background()
-        self.screen.blit(self.background, [0, 0])
 
         self.stats = stats.Stats(self.screen, self.images.get_image(heart_img))
         self.dragon = dragon.Dragon(self.images.get_image(dragon_img), self.screen)
@@ -41,80 +41,81 @@ class Game(object):
         self.rendering.add(self.dragon)
         self.rendering.add(self.boss)
 
+        self.sounds.play_music()
+
     def clear_screen(self):
         self.screen.blit(self.background, [0, 0])
         pygame.display.flip()
+
+    def release_demon(self):
+        self.boss.release_demon(self.demons, self.images.get_image(demon_img),
+            self.screen)
+
+    def release_baby(self):
+        self.boss.release_baby(self.babies, self.images.get_image(baby_img),
+            self.screen)
+
+    def move_dragon(self, key):
+        self.dragon.move(key)
+
+    def fire_fireball(self):
+        fireball = self.dragon.fire(self.images.get_image(fireball_img))
+        if fireball != None:
+            self.fireballs.add(fireball)
+
+    def control_volume(self, key):
+        if key == K_m:
+            self.sounds.toggle_music()
+        if key == K_d:
+            self.sounds.volume_down()
+        if key == K_u:
+            self.sounds.volume_up()
 
     def update_gameobjects(self):
         self.rendering.update()
         self.fireballs.update()
         self.demons.update()
         self.babies.update()
-        self.stats.update(dragon, boss)
+        self.stats.update(self.dragon, self.boss)
 
-    def restart(self):
-        self.dragon.reset()
-        self.boss.reset()
+    def update_display(self):
+        pygame.display.update(self.rendering.draw(self.screen))
+        pygame.display.update(self.fireballs.draw(self.screen))
+        pygame.display.update(self.demons.draw(self.screen))
+        pygame.display.update(self.babies.draw(self.screen))
+
         self.screen.blit(self.background, [0, 0])
-        pygame.display.flip()
-        self.stats.update(dragon, boss)
-        self.demons.empty()
-        self.fireballs.empty()
-        self.babies.empty()
-        pygame.event.clear()
 
-    def evaluate_event(self, event):
-        if event.type == pygame.QUIT:
-            sys.exit()
+    def collide(self, sprite, group):
+        return pygame.sprite.spritecollide(sprite, group, True, pygame.sprite.collide_mask)
 
-        elif event.type == DEMON_EVENT:
-            boss.release_demon(demons, images.get_image(demon_img), screen)
-            #game.release_demon()
-
-        elif event.type == BABY_EVENT:
-            boss.release_baby(babies, images.get_image(baby_img), screen)
-            #game.release_baby()
-
-        elif event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
-                sys.exit()
-            if event.key in (K_UP, K_DOWN):
-                dragon.move(event.key)
-            if event.key == K_SPACE:
-                #game.fireball()
-                fireball = dragon.fire(images.get_image(fireball_img))
-                if fireball != None:
-                    fireballs.add(fireball)
-
-        elif event.type == KEYUP:
-            if event.key == K_m:
-                sounds.toggle_music()
-            if event.key == K_u:
-                sounds.volume_up()
-            if event.key == K_d:
-                sounds.volume_down()
+    def groupcollide(self, group1, group2):
+        return pygame.sprite.groupcollide(group1, group2, True, True)
 
     def check_collisions(self):
         killed = False
         killed_boss = False
 
-        if (pygame.sprite.spritecollide(self.dragon, self.demons, True, None)):
+        if self.collide(self.dragon, self.demons):
             print "#hit by demon"
             killed = self.dragon.hit_by_demon()
             self.sounds.play_sound(hit_by_demon_snd)
-        if (pygame.sprite.spritecollide(self.dragon, self.babies, True, None)):
+        if self.collide(self.dragon, self.babies):
             print "#caught baby"
             self.dragon.caught_baby()
             self.sounds.play_sound(caught_baby_snd)
-        if (pygame.sprite.spritecollide(self.boss, self.fireballs, True, pygame.sprite.collide_mask)):
+        if self.collide(self.boss, self.fireballs):
             print "#hit boss"
             killed_boss = self.boss.hit()
+            if killed_boss:
+                time = (pygame.time.get_ticks() - self.timer) / 1000
+                self.dragon.killed_boss(time)
             self.sounds.play_sound(hit_boss_snd)
-        if (pygame.sprite.groupcollide(self.fireballs, self.demons, True, True)):
+        if self.groupcollide(self.fireballs, self.demons):
             print "#hit demon"
             self.dragon.hit_demon()
             self.sounds.play_sound(hit_demon_snd)
-        if (pygame.sprite.groupcollide(self.fireballs, self.babies, True, True)):
+        if self.groupcollide(self.fireballs, self.babies):
             print "#hit baby"
             self.dragon.hit_baby()
             self.sounds.play_sound(hit_baby_snd)
@@ -125,12 +126,14 @@ class Game(object):
         self.clear_screen()
         title = self.images.load_image("resources/Title.gif")
         self.screen.blit(title, [0, 0])
+        controls = self.images.load_image("resources/Controls.gif")
+        self.screen.blit(controls, [0, 200])
         text = textsurface.TextSurface("Press <SPACE> to Start")
         rect = text.get_rect()
         width = rect.width
         height = rect.height
         xpos = (self.screen.get_width() - rect.width) / 2
-        ypos = self.screen.get_height() - height
+        ypos = self.screen.get_height() - height * 2
         text.set_position((xpos, ypos), self.screen)
         self.screen.blit(text, text.get_rect())
         pygame.display.flip()
@@ -140,21 +143,27 @@ class Game(object):
             if (event.type == KEYUP and event.key == K_SPACE):
                 pygame.event.clear()
                 self.clear_screen()
-                break
+                self.timer = pygame.time.get_ticks()
+                return True
+            if (event.type == KEYDOWN and event.key == K_ESCAPE):
+                return False
 
     def end_screen(self):
-        game_over = textsurface.TextSurface("GAME OVER!", RED, TRANSPARENT, 64)
-        rect = game_over.get_rect()
+        self.clear_screen()
+        game_over = self.images.load_image("resources/Game_Over.gif")
+        self.screen.blit(game_over, [0, 0])
+        text = textsurface.TextSurface("Your Score: "+str(self.dragon.score))
+        rect = text.get_rect()
         width = rect.width
         height = rect.height
         xpos = (self.screen.get_width() - rect.width) / 2
-        ypos = self.screen.get_height() / 2 - height
-        game_over.set_position((xpos, ypos), self.screen)
-        self.screen.blit(self.background, [0, 0])
-        self.screen.blit(game_over, game_over.get_rect())
+        ypos = self.screen.get_height() - height * 6
+        text.set_position((xpos, ypos), self.screen)
+        self.screen.blit(text, text.get_rect())
         pygame.display.flip()
         pygame.event.clear()
         while True:
             event = pygame.event.poll()
             if (event.type == KEYUP and event.key == K_SPACE):
+                sys.exit()
                 break

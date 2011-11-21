@@ -16,6 +16,7 @@ HIT_BY_DEMON_PTS = -5
 CAUGHT_BABY_PTS = 10
 HIT_BABY_PTS = -20
 HIT_DEMON_PTS = 10
+KILLED_BOSS_PTS = 100
 
 class Dragon(mysprite.MySprite):
     def __init__(self, image, screen):
@@ -68,6 +69,9 @@ class Dragon(mysprite.MySprite):
 
     def caught_baby(self):
         self.score += CAUGHT_BABY_PTS
+
+    def killed_boss(self, time):
+        self.score += (KILLED_BOSS_PTS - time * 2)
 
 class Fireball(mysprite.MySprite):
     def __init__(self, image, screen, position):
