@@ -5,20 +5,32 @@ import random
 from pygame.locals import *
 from globals import *
 
+STARTPOS = (4, 200)
+MAXLIVES = 3
+STEP = 8
+
+FIREBALL_STEP = 12
+FIREREPEAT = 500
+
+HIT_BY_DEMON_PTS = -5
+CAUGHT_BABY_PTS = 10
+HIT_BABY_PTS = -20
+HIT_DEMON_PTS = 10
+
 class Dragon(mysprite.MySprite):
     def __init__(self, image, screen):
         mysprite.MySprite.__init__(self, image, screen)
 
-        self.rect.topleft = STARTPOS_DRAGON
-        self.step = 8
-        self.timer = 0
+        self.rect.topleft = STARTPOS
+        self.step = STEP
         self.lives = MAXLIVES
+        self.timer = 0
         self.score = 0
 
     def reset(self):
-        self.rect.topleft = STARTPOS_DRAGON
-        self.timer = 0
+        self.rect.topleft = STARTPOS
         self.lives = MAXLIVES
+        self.timer = 0
         self.score = 0
 
     def move(self, key):
@@ -40,20 +52,16 @@ class Dragon(mysprite.MySprite):
         else:
             return None
 
-    def set_score(self, points):
-        self.score += points
-        self.score = max(0, self.score)
-
     def hit_by_demon(self):
         self.lives -= 1
         if self.lives <= 0:
             print "GAME OVER"
             return True
-        self.score = max(0, self.score - HIT_BY_DEMON_PTS)
+        self.score = max(0, self.score + HIT_BY_DEMON_PTS)
         return False
 
     def hit_baby(self):
-        self.score = max(0, self.score - HIT_BABY_PTS)
+        self.score = max(0, self.score + HIT_BABY_PTS)
 
     def hit_demon(self):
         self.score += HIT_DEMON_PTS
