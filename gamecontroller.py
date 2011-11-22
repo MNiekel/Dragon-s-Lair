@@ -15,6 +15,9 @@ from pygame.locals import *
 from soundcontroller import *
 from imagecontroller import *
 
+MAX_TIME_BONUS = 200
+BOSS_BONUS = 100
+
 class Game(object):
     def __init__(self, size):
         pygame.mixer.pre_init(44100, -16, 2, 2048)

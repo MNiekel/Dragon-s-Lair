@@ -1,9 +1,7 @@
 import pygame
 import mysprite
-import random
 
 from pygame.locals import *
-from globals import *
 
 STARTPOS = (4, 200)
 MAXLIVES = 3

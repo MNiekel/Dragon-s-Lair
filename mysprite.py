@@ -1,4 +1,5 @@
 import pygame
+
 from pygame.locals import *
 
 class MySprite(pygame.sprite.Sprite):

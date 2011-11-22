@@ -1,15 +1,10 @@
 import pygame
 import sys
 import time
-import random
-import soundcontroller
-import imagecontroller
 import gamecontroller
 
 from globals import *
 from pygame.locals import *
-from soundcontroller import *
-from imagecontroller import *
 
 game = gamecontroller.Game(PANDORA)
 game.initialize()
