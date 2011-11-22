@@ -22,6 +22,8 @@ class Game(object):
         pygame.key.set_repeat(1)
         self.screen = pygame.display.set_mode(size)
         self.timer = 0
+        self.boss_bonus = 0
+        self.time_bonus = 0
 
     def initialize(self):
         self.sounds = soundcontroller.SoundController()
@@ -108,8 +110,9 @@ class Game(object):
             print "#hit boss"
             killed_boss = self.boss.hit()
             if killed_boss:
+                self.boss_bonus = BOSS_BONUS
                 time = (pygame.time.get_ticks() - self.timer) / 1000
-                self.dragon.killed_boss(time)
+                self.time_bonus = max(0, MAX_TIME_BONUS - time * 5)
             self.sounds.play_sound(hit_boss_snd)
         if self.groupcollide(self.fireballs, self.demons):
             print "#hit demon"
@@ -147,19 +150,49 @@ class Game(object):
                 return True
             if (event.type == KEYDOWN and event.key == K_ESCAPE):
                 return False
+            if (event.type == pygame.QUIT):
+                return False
 
     def end_screen(self):
         self.clear_screen()
-        game_over = self.images.load_image("resources/Game_Over.gif")
-        self.screen.blit(game_over, [0, 0])
-        text = textsurface.TextSurface("Your Score: "+str(self.dragon.score))
-        rect = text.get_rect()
+        if self.boss_bonus > 0:
+            end = self.images.load_image("resources/Killed_Boss.gif")
+        else:
+            end = self.images.load_image("resources/Game_Over.gif")
+        self.screen.blit(end, [0, 0])
+        text1 = textsurface.TextSurface("Your Score: "+str(self.dragon.score))
+        rect = text1.get_rect()
+        width = rect.width
+        height = rect.height
+        xpos = (self.screen.get_width() - rect.width) / 2
+        ypos = self.screen.get_height() - height * 7
+        text1.set_position((xpos, ypos), self.screen)
+        self.screen.blit(text1, text1.get_rect())
+        text2 = textsurface.TextSurface("Boss Bonus: "+str(self.boss_bonus))
+        rect = text2.get_rect()
         width = rect.width
         height = rect.height
         xpos = (self.screen.get_width() - rect.width) / 2
         ypos = self.screen.get_height() - height * 6
-        text.set_position((xpos, ypos), self.screen)
-        self.screen.blit(text, text.get_rect())
+        text2.set_position((xpos, ypos), self.screen)
+        self.screen.blit(text2, text2.get_rect())
+        text3 = textsurface.TextSurface("Time Bonus: "+str(self.time_bonus))
+        rect = text3.get_rect()
+        width = rect.width
+        height = rect.height
+        xpos = (self.screen.get_width() - rect.width) / 2
+        ypos = self.screen.get_height() - height * 5
+        text3.set_position((xpos, ypos), self.screen)
+        self.screen.blit(text3, text3.get_rect())
+        total_score = self.dragon.score + self.time_bonus + self.boss_bonus
+        text4 = textsurface.TextSurface("Total: "+str(total_score))
+        rect = text4.get_rect()
+        width = rect.width
+        height = rect.height
+        xpos = (self.screen.get_width() - rect.width) / 2
+        ypos = self.screen.get_height() - height * 3
+        text4.set_position((xpos, ypos), self.screen)
+        self.screen.blit(text4, text4.get_rect())
         pygame.display.flip()
         pygame.event.clear()
         while True:
@@ -167,3 +200,7 @@ class Game(object):
             if (event.type == KEYUP and event.key == K_SPACE):
                 sys.exit()
                 break
+            if (event.type == KEYDOWN and event.key == K_ESCAPE):
+                sys.exit()
+            if (event.type == pygame.QUIT):
+                sys.exit()
