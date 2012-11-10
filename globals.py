@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 
 PANDORA = 800, 480
-FPS = 30
+FPS = 50
 BABY_EVENT = USEREVENT + 1
 DEMON_EVENT = USEREVENT + 2
 
